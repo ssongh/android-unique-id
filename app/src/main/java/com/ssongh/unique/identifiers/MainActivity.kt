@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
      */
     private suspend fun requestAdvertisingInfo(): String? =
         coroutineScope {
-            val advertisingId = withContext(Dispatchers.IO) {
+            val advertisingId = async(Dispatchers.IO) {
                 val advertisingIdInfo = AdvertisingIdClient.getAdvertisingIdInfo(applicationContext)
                 val advertisingId: String? = advertisingIdInfo?.run {
                     if (!isLimitAdTrackingEnabled) {
@@ -159,7 +159,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 advertisingId
             }
-            advertisingId
+            advertisingId.await()
         }
 
 
@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
      */
     private suspend fun requestWidevineID(wvDrm: MediaDrm?): String? =
         coroutineScope {
-            val widevineID = withContext(Dispatchers.Default) {
+            val widevineID = async(Dispatchers.Default) {
                 var encodedWidevineId: String? = null
                 wvDrm?.run {
                     val widevineId = getPropertyByteArray(MediaDrm.PROPERTY_DEVICE_UNIQUE_ID)
@@ -201,6 +201,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 encodedWidevineId
             }
-            widevineID
+            widevineID.await()
         }
 }
