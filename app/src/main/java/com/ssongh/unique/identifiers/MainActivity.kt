@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import com.google.firebase.installations.FirebaseInstallations
+import com.ssongh.unique.identifiers.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import java.util.*
@@ -18,6 +19,7 @@ import kotlin.coroutines.CoroutineContext
 private const val TAG = "unique-id"
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
+    private lateinit var binding: ActivityMainBinding
 
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
@@ -28,33 +30,41 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
         job = Job()
         MobileAds.initialize(this) {}
 
 
         // GUID
-        Log.d(TAG, "GUID : ${requestGUID()}")
+        val rstGUID = "GUID : ${requestGUID()}"
+        Log.d(TAG, rstGUID)
         Log.d(TAG, "==================================================")
+        binding.tvGuid.text = rstGUID
 
         // 인스턴스 ID
         requestInstanceID()
 
         launch(exceptionHandler) {
             // 인스턴스 ID
-            val defInstanceID = async(Dispatchers.Default) {
+            val defInstanceID = withContext(Dispatchers.Default) {
                 callBackInstanceID()
             }
-            Log.d(TAG, "인스턴스 ID Coroutine : ${defInstanceID.await()}")
+            val rstInstanceID = "인스턴스 ID Coroutine : $defInstanceID"
+            Log.d(TAG, rstInstanceID)
             Log.d(TAG, "==================================================")
+            binding.tvInstanceCo.text = rstInstanceID
 
             // 광고 ID
-            val defAdvertisingID = async(Dispatchers.Default) {
+            val defAdvertisingID = withContext(Dispatchers.Default) {
                 requestAdvertisingInfo()
             }
-            Log.d(TAG, "AD ID Coroutine : ${defAdvertisingID.await()}")
+            val rstAdvertisingID = "AD ID Coroutine : $defAdvertisingID"
+            Log.d(TAG,rstAdvertisingID)
             Log.d(TAG, "==================================================")
+            binding.tvAdid.text = rstAdvertisingID
 
             // Widevine ID
             val widevineUUID = UUID(-0x121074568629b532L, -0x5c37d8232ae2de13L)
@@ -63,18 +73,27 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             } catch (e: UnsupportedSchemeException) {
                 null
             }
-            Log.d(TAG, "Widevine level : ${wvDrm?.getPropertyString("securityLevel")}")
-            val defWidevineID = async(Dispatchers.Default) {
+
+            val rstWidevinedLevel = "Widevine level : ${wvDrm?.getPropertyString("securityLevel")}"
+            Log.d(TAG, rstWidevinedLevel)
+            binding.tvWidevineLevel.text = rstWidevinedLevel
+
+            val defWidevineID = withContext(Dispatchers.Default) {
                 requestWidevineID(wvDrm)
             }
-            Log.d(TAG, "Widevine ID Coroutine : ${defWidevineID.await()}")
+            val rstWidevineID = "Widevine ID : $defWidevineID"
+            Log.d(TAG, rstWidevineID)
             Log.d(TAG, "==================================================")
+            binding.tvWidevineId.text = rstWidevineID
             wvDrm?.close()
         }
 
         // SSAID
-        Log.d(TAG, "SSAID : ${requestSSAID()}")
+        val rstSSAID = "SSAID : ${requestSSAID()}"
+        Log.d(TAG, rstSSAID)
         Log.d(TAG, "==================================================")
+        binding.tvSsaid.text = rstSSAID
+
     }
 
     override fun onDestroy() {
@@ -101,8 +120,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 Log.w(TAG, "getInstanceId failed", task.exception)
                 return@addOnCompleteListener
             }
-            Log.d(TAG, "인스턴스 ID : ${task.result}")
+            val rstInstanceID = "인스턴스 ID : ${task.result}"
+            Log.d(TAG, rstInstanceID)
             Log.d(TAG, "==================================================")
+            binding.tvInstance.text = rstInstanceID
         }
     }
 
@@ -127,7 +148,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
      */
     private suspend fun requestAdvertisingInfo(): String? =
         coroutineScope {
-            val advertisingId = async(Dispatchers.IO) {
+            val advertisingId = withContext(Dispatchers.IO) {
                 val advertisingIdInfo = AdvertisingIdClient.getAdvertisingIdInfo(applicationContext)
                 val advertisingId: String? = advertisingIdInfo?.run {
                     if (!isLimitAdTrackingEnabled) {
@@ -138,7 +159,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 advertisingId
             }
-            advertisingId.await()
+            advertisingId
         }
 
 
@@ -162,7 +183,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
      */
     private suspend fun requestWidevineID(wvDrm: MediaDrm?): String? =
         coroutineScope {
-            val widevineID = async() {
+            val widevineID = withContext(Dispatchers.Default) {
                 var encodedWidevineId: String? = null
                 wvDrm?.run {
                     val widevineId = getPropertyByteArray(MediaDrm.PROPERTY_DEVICE_UNIQUE_ID)
@@ -176,10 +197,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                 android.util.Base64.DEFAULT
                             )
                         }
-                    Log.d(TAG, "Widevine ID : $encodedWidevineId")
+                    Log.d(TAG, "Widevine ID suspend: $encodedWidevineId")
                 }
                 encodedWidevineId
             }
-            widevineID.await()
+            widevineID
         }
 }
