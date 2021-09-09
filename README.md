@@ -2,7 +2,7 @@
 
 ### 1. 고유 식별자 비교 표 
 
-![unique id](https://user-images.githubusercontent.com/50819260/103494322-a7e8e700-4e79-11eb-8c12-843d4a591126.png)
+![unique id](https://user-images.githubusercontent.com/50819260/132616853-fe7d7303-3c6f-4cba-8fc8-1bb750450a17.png)
 
 <br>
 
